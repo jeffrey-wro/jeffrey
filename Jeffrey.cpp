@@ -249,20 +249,15 @@ void Jeffrey::weightBack(){
 	Utils::waitFor(1);
 }
 
-void Jeffrey::rotate180dregees(){
-	int speed = 200;
+void Jeffrey::rotate90dregees(int numberOf90degree){
 
-	int rigthCount = 0;
+	int speed = 200;
+	int delay = 3*numberOf90degree;
+	int degrees = -485*numberOf90degree;
 
 	mc.resetEncoders(DC);
 
-	for(int i=0; i<2; i++){
-
-		rigthCount -= 485;
-		mc.setMotorDegrees(DC, speed, 0, speed, rigthCount);
-
-	}
-
-	Utils::waitFor(1);
+	mc.setMotorDegrees(DC, speed, 0, speed, degrees);
+	Utils::waitFor(delay);
 	
 }

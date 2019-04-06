@@ -45,7 +45,7 @@ public:
 	void closeHand();
 	void weightFront();
 	void weightBack();
-	void rotate180dregees();
+	void rotate90dregees(int numberOf90degree);
 
 };
 
