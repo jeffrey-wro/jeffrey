@@ -171,7 +171,7 @@ void Jeffrey::moveToDistanceForward(int speed, float distance){
 		lavg = leftDistance;
 		ravg = rightDistance;
 
-		for(int i=0; i< lds.size(); i++){
+		for(unsigned int i=0; i< lds.size(); i++){
 			lavg += lds[i];
 			ravg += rds[i];
 
@@ -251,17 +251,18 @@ void Jeffrey::weightBack(){
 
 void Jeffrey::rotate180dregees(){
 	int speed = 200;
-	int delay = 3;
 
-	int leftCount = 0;
 	int rigthCount = 0;
+
+	mc.resetEncoders(DC);
 
 	for(int i=0; i<2; i++){
 
 		rigthCount -= 485;
 		mc.setMotorDegrees(DC, speed, 0, speed, rigthCount);
 
-		Utils::waitFor(delay);
-}
+	}
+
+	Utils::waitFor(1);
 	
 }
