@@ -5,28 +5,24 @@
 #include "Ultrasonic.h"
 
 
-	#define HAND_LEFT 0
-	#define HAND_CENTER 0
-	#define HAND_RIGHT 0
+#define HAND_LEFT 0
+#define HAND_CENTER 0
+#define HAND_RIGHT 0
 
+#define HAND_OPEN 180
+#define HAND_CLOSED 0
 
-	#define HAND_OPEN 180
-	#define HAND_CLOSED 0
-	#define WEIGHT_FRONT 0
-	#define WEIGHT_BACK 170
+#define WEIGHT_FRONT 0
+#define WEIGHT_BACK 170
 
 class Jeffrey {
 private:
-	Motor_Controller mc;
+    Motor_Controller mc;
     Ultrasonic ultrasonic;
 
-	/*
-	 * The number of degree to turn the (4" / 31.9cm) wheel forward one centimenter
-	 *  Formula used : 360/31.918581360472
-	 */
-	static constexpr double WHEEL_DEGREE_CM = 11.2786968;
-
-
+    /* The number of degree to turn the (4" / 31.9cm) wheel forward one centimenter
+     *  Formula used : 360/31.91858136047  */
+    static constexpr double WHEEL_DEGREE_CM = 11.2786968;
 
 public:
     Jeffrey();
