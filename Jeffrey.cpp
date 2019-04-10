@@ -15,6 +15,11 @@ Jeffrey::~Jeffrey(){
 
 }
 
+
+/*
+ * Initialize all of the robot functions
+ * Return the fpga status
+ */
 NiFpga_Status Jeffrey::init(NiFpga_Session* myrio_session){
 
 	NiFpga_Status status = mc.init(myrio_session);
@@ -27,17 +32,28 @@ NiFpga_Status Jeffrey::init(NiFpga_Session* myrio_session){
 	return status;
 }
 
+/*
+ * Reset all of the robot functions
+ */
 void Jeffrey::reset(){
 	Utils::waitFor(2);
 	mc.controllerReset(DC);
+	mc.controllerReset(SERVO);
+	Utils::waitFor(2);
 }
 
 
+/*
+ * Make the robot move a certain amount of cm
+ */
 void Jeffrey::moveForwardCM(int cm, int speed=100){
 
 	int degree = WHEEL_DEGREE_CM * cm;
 	int degree1 = degree+mc.readEncoderDegrees(DC, DC_1);
 	int degree2 = -degree+mc.readEncoderDegrees(DC, DC_2);
+
+	mc.resetEncoders(DC);
+	Utils::waitFor(2);
 
 	mc.setMotorDegrees(DC, speed, degree1, speed, degree2);
 
@@ -56,6 +72,10 @@ void Jeffrey::moveForwardCM(int cm, int speed=100){
 
 }
 
+/*
+ * Make the robot perpendicular to a flat surface
+ * TODO: uses an average of the last ten measurement to remove invalid measurement from reflection on adjacent objects
+ */
 int Jeffrey::alignWithWall(int speed=25, float calib=0.75){
 	float leftDistance;
     float rightDistance;
@@ -92,128 +112,124 @@ int Jeffrey::alignWithWall(int speed=25, float calib=0.75){
     }
 }
 
-int Jeffrey::servo(){
-
-		mc.setServoSpeeds(SERVO, 250, 250, 250, 250, 250, 250);
-	Utils::waitFor(1);
-
-	while(1){
-
-		printf("%d\n", mc.readServoPosition(SERVO, SERVO_1));
-		//mc.setServoPositions(SERVO, 180, 180, 180, 180, 180, 180);
-		//Utils::waitForMicro(1000000);
-		//mc.setServoPositions(SERVO, 0, 0, 0, 0, 0, 0);
-		//Utils::waitForMicro(1000000);
-
-		mc.setServoPosition(SERVO, SERVO_1, 180);
-    
-		Utils::waitForMicro(1000000);
-
-		/*int servo = 0;
-		int move = -255;
-		printf("QUIT = 0\n");
-		printf("Hand = 1\n");
-		printf("Elbow = 2\n");
-		printf("Enter which servo to move:\n");
-		scanf("%d", &servo);
-		if(servo == 0)
-			break;
-		int pos = mc.readServoPosition(SERVO, servo);
-		printf("Curent servo pos: %d \n", pos);
-		printf("Enter how much to move (%d,%d)\n", -1*pos, 180-pos);
-		scanf("%d", &move);
-		while(move < -1*pos || move > 180-pos ){
-			printf("Invalid input (%d,%d)\n", -1*pos, 180-pos);
-			scanf("%d", &move);
-		}
-		printf("Moving to %d\n", move+pos);
-		mc.setServoPosition(SERVO, servo, move+pos);*/
-
-	}
 
 
-
-
-}
-
-
-
-//make the robot go to the block when already aligned 
-void Jeffrey::moveToDistanceForward(int speed, float distance){
+/*
+ * Make the robot go to forward toward a flat object.
+ * The robot must already be perpendicular to the surface.
+ * It uses an average of the last ten measurement to remove invalid measurement from reflection on adjacent objects
+ */
+void Jeffrey::moveToDistanceForward(int speed, float distance, bool verbose){
 
 
     float leftDistance;
     float rightDistance;
-    float lavg = 0;
-	float ravg = 0;
     std::vector<float> lds;
     std::vector<float> rds;
+    float leftAvg = 0;
+	float rightAvg = 0;
 
 	mc.setMotorSpeeds(DC, -speed, speed);
 
     do {
 
-       	do{
-	       	leftDistance = ultrasonic.getDistance(Ultrasonic::FRONT_RIGHT);
-	    }while(leftDistance < 0);
-	    do{
-       		rightDistance = ultrasonic.getDistance(Ultrasonic::FRONT_LEFT);
-	    }while(rightDistance < 0);
+       	do{ leftDistance = ultrasonic.getDistance(Ultrasonic::FRONT_RIGHT); }while(leftDistance < 0);
+	    do{ rightDistance = ultrasonic.getDistance(Ultrasonic::FRONT_LEFT); }while(rightDistance < 0);
 
+	    //only keep the last 10 measurement
 	    if (lds.size() >= 10 ){
 	    	lds.erase(lds.begin());
 	    	rds.erase(rds.begin());
 	    }
-
 	    lds.push_back(leftDistance);
 		rds.push_back(rightDistance);
 
-		lavg = leftDistance;
-		ravg = rightDistance;
+
+
+		leftAvg = leftDistance;
+		rightAvg = rightDistance;
 
 		for(unsigned int i=0; i< lds.size(); i++){
-			lavg += lds[i];
-			ravg += rds[i];
-
+			leftAvg += lds[i];
+			rightAvg += rds[i];
 		} 
-		lavg/=lds.size()+1;
-		ravg/=rds.size()+1;
+
+		leftAvg/=lds.size()+1;
+		rightAvg/=rds.size()+1;
+
+		if(verbose){
+			printf("Distance (L,R): %f, %f\n", leftAvg, rightAvg);
+			fflush(stdout);
+		}
 
 
-printf("%f %f\n", lavg, ravg);
-fflush(stdout);
-
-	}while(lavg > distance && ravg > distance );
+	}while(leftAvg > distance && rightAvg > distance );
 
 	mc.setMotorSpeeds(DC, 0, 0);
 }
 
-//make the robot go to the block when already aligned 
-void Jeffrey::moveToDistanceBackward(int speed, float distance){
+/*
+ * Make the robot go to backward toward a flat object.
+ * The robot must already be perpendicular to the surface.
+ * It uses an average of the last ten measurement to remove invalid measurement from reflection on adjacent objects
+ */
+void Jeffrey::moveToDistanceBackward(int speed, float distance, bool verbose){
 
 
     float leftDistance;
     float rightDistance;
+    std::vector<float> lds;
+    std::vector<float> rds;
+    float leftAvg = 0;
+	float rightAvg = 0;
 
 	mc.setMotorSpeeds(DC, speed, -speed);
 
     do {
 
-       	do{
-	       	leftDistance = ultrasonic.getDistance(Ultrasonic::FRONT_RIGHT);
-       		rightDistance = ultrasonic.getDistance(Ultrasonic::FRONT_LEFT);
-	    }while(leftDistance < 0 || rightDistance < 0);
+       	do{ leftDistance = ultrasonic.getDistance(Ultrasonic::FRONT_RIGHT); }while(leftDistance < 0);
+	    do{ rightDistance = ultrasonic.getDistance(Ultrasonic::FRONT_LEFT); }while(rightDistance < 0);
 
-printf("%f %f\n", leftDistance, rightDistance);
-fflush(stdout);
+	    //only keep the last 10 measurement
+	    if (lds.size() >= 10 ){
+	    	lds.erase(lds.begin());
+	    	rds.erase(rds.begin());
+	    }
+	    lds.push_back(leftDistance);
+		rds.push_back(rightDistance);
+
+
+
+		leftAvg = leftDistance;
+		rightAvg = rightDistance;
+
+		for(unsigned int i=0; i< lds.size(); i++){
+			leftAvg += lds[i];
+			rightAvg += rds[i];
+		} 
+
+		leftAvg/=lds.size()+1;
+		rightAvg/=rds.size()+1;
+
+		if(verbose){
+			printf("Distance (L,R): %f, %f\n", leftAvg, rightAvg);
+			fflush(stdout);
+		}
+
 
 	}while(leftDistance < distance && rightDistance < distance );
 
 	mc.setMotorSpeeds(DC, 0, 0);
 }
 
-//align the hane with the block
-// currently assums that the robot is centered to the block
+
+
+/*
+ * Align the hand with the block
+ * currently assumes that the robot is centered to the block
+ * and uses a precalculated time to center hand
+ * TODO: use a distance sensor (ei. infrared)
+ */
 void Jeffrey::moveHandToBlock(){
 
 	//mc.setServoPosition(SERVO, SERVO_4, HAND_CENTER);
@@ -224,14 +240,19 @@ void Jeffrey::moveHandToBlock(){
 	mc.setCRServoState(SERVO, CR_SERVO_1, 0);
 }
 
-//open the hand
+
+/*
+ * Fully open the hand
+ */
 void Jeffrey::openHand(){
 
 	mc.setServoPosition(SERVO, SERVO_2, HAND_OPEN);
 	Utils::waitFor(1);
 }
 
-//open the hand
+/*
+ * Fully close the hand
+ */
 void Jeffrey::closeHand(){
 	
 	mc.setServoPosition(SERVO, SERVO_2,HAND_CLOSED);
@@ -239,23 +260,33 @@ void Jeffrey::closeHand(){
 
 }
 
+/*
+ * Move counter weight to the front
+ */
 void Jeffrey::weightFront(){
 	mc.setServoPosition(SERVO,SERVO_4,WEIGHT_FRONT);
 	Utils::waitFor(1);
 }
 
+/*
+ * Move counter weight to the back
+ */
 void Jeffrey::weightBack(){
 	mc.setServoPosition(SERVO,SERVO_4,WEIGHT_BACK);
 	Utils::waitFor(1);
 }
 
+/*
+ * Make the robot turn 90 for n times
+ */
 void Jeffrey::rotate90dregees(int numberOf90degree){
 
 	int speed = 200;
 	int delay = 3*numberOf90degree;
-	int degrees = -485*numberOf90degree;
+	int degrees = -TURN_90_ENCODER*numberOf90degree;
 
 	mc.resetEncoders(DC);
+	Utils::waitFor(2);
 
 	mc.setMotorDegrees(DC, speed, 0, speed, degrees);
 	Utils::waitFor(delay);
