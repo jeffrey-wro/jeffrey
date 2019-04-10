@@ -9,7 +9,10 @@ private:
 	 */
 	static constexpr double WHEEL_DEGREE_CM = 11.2786968;
 	/*
-	 *
+	 *Formula to turn 90 degrees:
+	 * 2pi(w)/4 ∗ 360/(d(pi))​
+	 * w = width of robot base​
+	 * d = diameter of wheel
 	 */
 	static constexpr double TURN_90_ENCODER = 485;
 
