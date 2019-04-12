@@ -1,6 +1,8 @@
 #ifndef JEFFREY_H_
 #define JEFFREY_H_
 
+#include "Ultrasonic.h"
+
 class Jeffrey {
 private:
 	/*
@@ -14,6 +16,8 @@ private:
 	 * w = width of robot base​
 	 * d = diameter of wheel
 	 */
+	 
+	 //old 485
 	static constexpr double TURN_90_ENCODER = 485;
 
 
@@ -21,8 +25,8 @@ private:
 	static constexpr double HAND_CENTER = 0;
 	static constexpr double HAND_RIGHT = 0;
 
-	static constexpr double HAND_OPEN = 180;
-	static constexpr double HAND_CLOSED = 0;
+	static constexpr double HAND_OPEN = 170;
+	static constexpr double HAND_CLOSED = 10;
 
 	static constexpr double WEIGHT_FRONT = 0;
 	static constexpr double WEIGHT_BACK = 170;
@@ -53,6 +57,8 @@ public:
 	void weightBack();
 
 	void rotate90dregees(int numberOf90degree);
+
+	void test();
 
 };
 

@@ -25,6 +25,7 @@ NiFpga_Status Jeffrey::init(NiFpga_Session* myrio_session){
 	NiFpga_Status status = mc.init(myrio_session);
 	mc.controllerEnable(DC);
 	mc.controllerEnable(SERVO);
+	//mc.setMotorInvert(DC, DC_2, 1);
 
 	int volt = mc.readBatteryVoltage(1);
 	printf("Battery: %.02fv\n\n", volt/100.0);
@@ -158,7 +159,7 @@ void Jeffrey::moveToDistanceForward(int speed, float distance, bool verbose){
 		rightAvg/=rds.size()+1;
 
 		if(verbose){
-			printf("Distance (L,R): %f, %f\n", leftAvg, rightAvg);
+			//printf("Distance (L,R): %f, %f\n", leftAvg, rightAvg);
 			fflush(stdout);
 		}
 
@@ -212,7 +213,7 @@ void Jeffrey::moveToDistanceBackward(int speed, float distance, bool verbose){
 		rightAvg/=rds.size()+1;
 
 		if(verbose){
-			printf("Distance (L,R): %f, %f\n", leftAvg, rightAvg);
+			//printf("Distance (L,R): %f, %f\n", leftAvg, rightAvg);
 			fflush(stdout);
 		}
 
@@ -246,8 +247,10 @@ void Jeffrey::moveHandToBlock(){
  */
 void Jeffrey::openHand(){
 
+	printf("Open: %f\n", HAND_OPEN);
+
 	mc.setServoPosition(SERVO, SERVO_2, HAND_OPEN);
-	Utils::waitFor(1);
+	Utils::waitFor(2);
 }
 
 /*
@@ -255,8 +258,10 @@ void Jeffrey::openHand(){
  */
 void Jeffrey::closeHand(){
 	
+	printf("Close: %f\n", HAND_CLOSED);
+
 	mc.setServoPosition(SERVO, SERVO_2,HAND_CLOSED);
-	Utils::waitFor(1);
+	Utils::waitFor(2);
 
 }
 
@@ -281,14 +286,72 @@ void Jeffrey::weightBack(){
  */
 void Jeffrey::rotate90dregees(int numberOf90degree){
 
+
+	printf("start delay");
+	fflush(stdout);
+	Utils::waitFor(5);
+
 	int speed = 200;
 	int delay = 3*numberOf90degree;
 	int degrees = -TURN_90_ENCODER*numberOf90degree;
 
+	printf("1");
+	fflush(stdout);
+
 	mc.resetEncoders(DC);
 	Utils::waitFor(2);
 
-	mc.setMotorDegrees(DC, speed, 0, speed, degrees);
+	printf("2");
+	fflush(stdout);
+
+	mc.setMotorDegrees(DC, 0, 0, speed, degrees);
 	Utils::waitFor(delay);
+
+	printf("3");
+	fflush(stdout);
 	
+	printf("end delay");
+	fflush(stdout);
+	Utils::waitFor(5);
+}
+
+
+
+void Jeffrey::test(){
+
+	int numberOf90degree = 2;
+
+	int speed = 200;
+	int delay = 3*numberOf90degree;
+	int degrees = -TURN_90_ENCODER*numberOf90degree;
+
+	printf("1");
+	fflush(stdout);
+
+	mc.resetEncoders(DC);
+	Utils::waitFor(2);
+
+	printf("2");
+	fflush(stdout);
+
+	mc.setMotorDegrees(DC, 0, 0, speed, degrees);
+	Utils::waitFor(delay);
+
+	printf("3");
+	fflush(stdout);
+
+	// double HAND_CLOSED = 10;
+	// double HAND_OPEN = 170;
+
+	// printf("Close: %f\n", HAND_CLOSED);
+
+	// mc.setServoPosition(SERVO, SERVO_2,HAND_CLOSED);
+	// Utils::waitFor(2);
+
+	// Utils::waitFor(2);
+
+	// printf("Open: %f\n", HAND_OPEN);
+
+	// mc.setServoPosition(SERVO, SERVO_2, HAND_OPEN);
+	// Utils::waitFor(2);
 }
